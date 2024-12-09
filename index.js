@@ -11,7 +11,6 @@ app.use(function(req, res, next) {
     next();
 });
 
-
 app.use(bodyParser.json());
 
 const PUERTO = process.env.PORT || 3306;
@@ -27,6 +26,26 @@ const pool = mysql.createPool({
     waitForConnections: true,
     queueLimit: 0
 });
+
+const conexion = {
+    query: (sql, params, callback) => {
+        pool.getConnection((err, connection) => {
+            if (err) {
+                console.error('Error obteniendo conexión:', err.message);
+                return callback(err, null);
+            }
+
+            connection.query(sql, params, (error, results) => {
+                connection.release(); // Liberar la conexión
+                if (error) {
+                    console.error('Error ejecutando consulta:', error.message);
+                    return callback(error, null);
+                }
+                callback(null, results);
+            });
+        });
+    }
+};
 
 // Ahora obtenemos una conexión desde el pool
 pool.getConnection((err, connection) => {
