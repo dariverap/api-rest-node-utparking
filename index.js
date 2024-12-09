@@ -15,7 +15,6 @@ app.use(bodyParser.json());
 
 const PUERTO = process.env.PORT || 3306;
 
-
 // Definimos el pool de conexiones correctamente
 const pool = mysql.createPool({
     host: 'bzcshl1sodk5akovfrpd-mysql.services.clever-cloud.com',
@@ -27,6 +26,7 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
+// Objeto conexion para manejar las consultas y transacciones
 const conexion = {
     query: (sql, params, callback) => {
         pool.getConnection((err, connection) => {
@@ -44,6 +44,46 @@ const conexion = {
                 callback(null, results);
             });
         });
+    },
+
+    // Método para manejar transacciones
+    beginTransaction: (callback) => {
+        pool.getConnection((err, connection) => {
+            if (err) {
+                console.error('Error obteniendo conexión:', err.message);
+                return callback(err, null);
+            }
+
+            connection.beginTransaction((error) => {
+                if (error) {
+                    connection.release();
+                    console.error('Error iniciando transacción:', error.message);
+                    return callback(error, null);
+                }
+                callback(null, connection); // Se pasa la conexión con la transacción iniciada
+            });
+        });
+    },
+
+    commitTransaction: (connection, callback) => {
+        connection.commit((err) => {
+            if (err) {
+                return connection.rollback(() => {
+                    connection.release();
+                    console.error('Error al confirmar la transacción:', err.message);
+                    callback(err, null);
+                });
+            }
+            connection.release(); // Liberar la conexión cuando la transacción se confirma
+            callback(null, 'Transacción completada con éxito');
+        });
+    },
+
+    rollbackTransaction: (connection, callback) => {
+        connection.rollback(() => {
+            connection.release();
+            callback(null, 'Transacción revertida');
+        });
     }
 };
 
@@ -57,14 +97,14 @@ pool.getConnection((err, connection) => {
     connection.release();  // Liberamos la conexión cuando terminamos de usarla
 });
 
+// Rutas de ejemplo
 app.listen(PUERTO, () => {
     console.log(`Servidor corriendo en el puerto ${PUERTO}`);
 });
 
-
 app.get('/', (req, res) => {
-    res.send('API')
-})
+    res.send('API');
+});
 
 app.get('/obtenerusuarios', (req, res) => {
     const query = `SELECT * FROM usuario WHERE estado = 1`;
