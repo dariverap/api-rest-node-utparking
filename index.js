@@ -4,12 +4,20 @@ const bodyParser = require('body-parser');
 
 const app = express();
 
-app.use(function(req, res, next) {
-    res.setHeader('Access-Control-Allow-Origin', '*'); // Permite solicitudes desde cualquier origen
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'); // Métodos permitidos
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*'); // Permitir solicitudes desde cualquier origen
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'); // Métodos HTTP permitidos
     res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization'); // Encabezados permitidos
-    next();
+    res.setHeader('Access-Control-Allow-Credentials', true); // Permitir cookies si es necesario
+
+    // Manejo de solicitudes preflight (OPTIONS)
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200); // Responder con éxito para las solicitudes OPTIONS
+    }
+
+    next(); // Pasar a la siguiente capa de middleware
 });
+
 
 app.use(bodyParser.json());
 
