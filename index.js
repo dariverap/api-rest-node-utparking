@@ -1,29 +1,18 @@
 const express = require('express');
 const mysql = require('mysql');
 const bodyParser = require('body-parser');
+const cors = require('cors'); // Importar cors
 
 const app = express();
 
-app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');; // Permitir solicitudes desde cualquier origen
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'); // Métodos HTTP permitidos
-    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization'); // Encabezados permitidos
-    res.setHeader('Access-Control-Allow-Credentials', true); // Permitir cookies si es necesario
-
-    // Manejo de solicitudes preflight (OPTIONS)
-    if (req.method === 'OPTIONS') {
-        return res.sendStatus(200); // Responder con éxito para las solicitudes OPTIONS
-    }
-
-    next(); // Pasar a la siguiente capa de middleware
-});
+// Configurar CORS
+app.use(cors());
 
 
 app.use(bodyParser.json());
 
 const PUERTO = process.env.PORT || 3306;
 
-// Eliminamos el pool de conexiones y usamos una conexión simple
 const conexion = mysql.createConnection({
     host: 'bzcshl1sodk5akovfrpd-mysql.services.clever-cloud.com',
     database: 'bzcshl1sodk5akovfrpd',
@@ -31,49 +20,6 @@ const conexion = mysql.createConnection({
     password: 'YWBSv09RCqw4mkA64OAi'
 });
 
-// Objeto conexion para manejar las consultas
-const conexionObj = {
-    query: (sql, params, callback) => {
-        conexion.query(sql, params, (error, results) => {
-            if (error) {
-                console.error('Error ejecutando consulta:', error.message);
-                return callback(error, null);
-            }
-            callback(null, results);
-        });
-    },
-
-    // Método para manejar transacciones
-    beginTransaction: (callback) => {
-        conexion.beginTransaction((err) => {
-            if (err) {
-                console.error('Error iniciando transacción:', err.message);
-                return callback(err, null);
-            }
-            callback(null, conexion); // Se pasa la conexión con la transacción iniciada
-        });
-    },
-
-    commitTransaction: (callback) => {
-        conexion.commit((err) => {
-            if (err) {
-                return conexion.rollback(() => {
-                    console.error('Error al confirmar la transacción:', err.message);
-                    callback(err, null);
-                });
-            }
-            callback(null, 'Transacción completada con éxito');
-        });
-    },
-
-    rollbackTransaction: (callback) => {
-        conexion.rollback(() => {
-            callback(null, 'Transacción revertida');
-        });
-    }
-};
-
-// Conectar a la base de datos
 conexion.connect((err) => {
     if (err) {
         console.error('Error obteniendo conexión:', err.stack);
@@ -82,11 +28,15 @@ conexion.connect((err) => {
     console.log('Conexión exitosa con el id ' + conexion.threadId);
 });
 
+// Ejemplo de ruta
+app.get('/', (req, res) => {
+    res.send('API');
+});
 
-// Rutas de ejemplo
 app.listen(PUERTO, () => {
     console.log(`Servidor corriendo en el puerto ${PUERTO}`);
 });
+
 
 app.get('/', (req, res) => {
     res.send('API');
