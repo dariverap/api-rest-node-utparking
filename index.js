@@ -5,15 +5,17 @@ const bodyParser = require('body-parser');
 const app = express();
 
 app.use(function(req, res, next) {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', '*');
-    res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    res.setHeader('Access-Control-Allow-Origin', '*'); // Permite solicitudes desde cualquier origen
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'); // Métodos permitidos
+    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization'); // Encabezados permitidos
     next();
 });
 
+
 app.use(bodyParser.json());
 
-const PUERTO = 3306;
+const PUERTO = process.env.PORT || 3306;
+
 
 // Definimos el pool de conexiones correctamente
 const pool = mysql.createPool({
