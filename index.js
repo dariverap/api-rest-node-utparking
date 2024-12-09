@@ -15,87 +15,65 @@ app.use(bodyParser.json());
 
 const PUERTO = process.env.PORT || 3306;
 
-// Definimos el pool de conexiones correctamente
-const pool = mysql.createPool({
+// Eliminamos el pool de conexiones y usamos una conexión simple
+const conexion = mysql.createConnection({
     host: 'bzcshl1sodk5akovfrpd-mysql.services.clever-cloud.com',
     database: 'bzcshl1sodk5akovfrpd',
     user: 'uvbvtkfpsz4rmfaq',
-    password: 'YWBSv09RCqw4mkA64OAi',
-    connectionLimit: 10,  // Número máximo de conexiones en el pool
-    waitForConnections: true,
-    queueLimit: 0
+    password: 'YWBSv09RCqw4mkA64OAi'
 });
 
-// Objeto conexion para manejar las consultas y transacciones
-const conexion = {
+// Objeto conexion para manejar las consultas
+const conexionObj = {
     query: (sql, params, callback) => {
-        pool.getConnection((err, connection) => {
-            if (err) {
-                console.error('Error obteniendo conexión:', err.message);
-                return callback(err, null);
+        conexion.query(sql, params, (error, results) => {
+            if (error) {
+                console.error('Error ejecutando consulta:', error.message);
+                return callback(error, null);
             }
-
-            connection.query(sql, params, (error, results) => {
-                connection.release(); // Liberar la conexión
-                if (error) {
-                    console.error('Error ejecutando consulta:', error.message);
-                    return callback(error, null);
-                }
-                callback(null, results);
-            });
+            callback(null, results);
         });
     },
 
     // Método para manejar transacciones
     beginTransaction: (callback) => {
-        pool.getConnection((err, connection) => {
+        conexion.beginTransaction((err) => {
             if (err) {
-                console.error('Error obteniendo conexión:', err.message);
+                console.error('Error iniciando transacción:', err.message);
                 return callback(err, null);
             }
-
-            connection.beginTransaction((error) => {
-                if (error) {
-                    connection.release();
-                    console.error('Error iniciando transacción:', error.message);
-                    return callback(error, null);
-                }
-                callback(null, connection); // Se pasa la conexión con la transacción iniciada
-            });
+            callback(null, conexion); // Se pasa la conexión con la transacción iniciada
         });
     },
 
-    commitTransaction: (connection, callback) => {
-        connection.commit((err) => {
+    commitTransaction: (callback) => {
+        conexion.commit((err) => {
             if (err) {
-                return connection.rollback(() => {
-                    connection.release();
+                return conexion.rollback(() => {
                     console.error('Error al confirmar la transacción:', err.message);
                     callback(err, null);
                 });
             }
-            connection.release(); // Liberar la conexión cuando la transacción se confirma
             callback(null, 'Transacción completada con éxito');
         });
     },
 
-    rollbackTransaction: (connection, callback) => {
-        connection.rollback(() => {
-            connection.release();
+    rollbackTransaction: (callback) => {
+        conexion.rollback(() => {
             callback(null, 'Transacción revertida');
         });
     }
 };
 
-// Ahora obtenemos una conexión desde el pool
-pool.getConnection((err, connection) => {
+// Conectar a la base de datos
+conexion.connect((err) => {
     if (err) {
-        console.error('Error obteniendo conexión del pool:', err.stack);
+        console.error('Error obteniendo conexión:', err.stack);
         return;
     }
-    console.log('Conexión exitosa al pool con el id ' + connection.threadId);
-    connection.release();  // Liberamos la conexión cuando terminamos de usarla
+    console.log('Conexión exitosa con el id ' + conexion.threadId);
 });
+
 
 // Rutas de ejemplo
 app.listen(PUERTO, () => {
