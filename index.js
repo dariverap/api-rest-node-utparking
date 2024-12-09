@@ -1,37 +1,45 @@
-const express = require('express')
-const mysql = require('mysql')
-const bodyParser = require('body-parser')
+const express = require('express');
+const mysql = require('mysql');
+const bodyParser = require('body-parser');
 
-const app = express()
+const app = express();
 
 app.use(function(req, res, next) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', '*');
     res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    next()
-})
+    next();
+});
 
-app.use(bodyParser.json())
+app.use(bodyParser.json());
 
-const PUERTO = 3306
+const PUERTO = 3306;
 
-const conexion = mysql.createConnection(
-    {
-        host:'bzcshl1sodk5akovfrpd-mysql.services.clever-cloud.com',
-        database: 'bzcshl1sodk5akovfrpd',
-        user: 'uvbvtkfpsz4rmfaq',
-        password: 'YWBSv09RCqw4mkA64OAi'
+// Definimos el pool de conexiones correctamente
+const pool = mysql.createPool({
+    host: 'bzcshl1sodk5akovfrpd-mysql.services.clever-cloud.com',
+    database: 'bzcshl1sodk5akovfrpd',
+    user: 'uvbvtkfpsz4rmfaq',
+    password: 'YWBSv09RCqw4mkA64OAi',
+    connectionLimit: 10,  // Número máximo de conexiones en el pool
+    waitForConnections: true,
+    queueLimit: 0
+});
+
+// Ahora obtenemos una conexión desde el pool
+pool.getConnection((err, connection) => {
+    if (err) {
+        console.error('Error obteniendo conexión del pool:', err.stack);
+        return;
     }
-)
+    console.log('Conexión exitosa al pool con el id ' + connection.threadId);
+    connection.release();  // Liberamos la conexión cuando terminamos de usarla
+});
 
 app.listen(PUERTO, () => {
     console.log(`Servidor corriendo en el puerto ${PUERTO}`);
-})
+});
 
-conexion.connect(error => {
-    if(error) throw error
-    console.log('Conexión exitosa a la base de datos');
-})
 
 app.get('/', (req, res) => {
     res.send('API')
