@@ -6,12 +6,8 @@ const cors = require('cors'); // Importar cors
 const app = express();
 
 // Configurar CORS
-app.use(cors({
-    origin: 'http://localhost:3000', // Cambiar a la URL de tu frontend
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
-    credentials: true // Permitir cookies y autenticación
-}));
+app.use(cors());
+
 
 
 app.use(bodyParser.json());
