@@ -536,18 +536,15 @@ app.put('/registro2/update/:id', (req, res) => {
                 return res.status(500).send('Error al actualizar el atributo disponible en espacio');
             }
 
-            // Obtener la fecha y hora actuales en la zona horaria local
-            const localDate = new Date().toLocaleString("en-US", { 
-                timeZone: "America/Lima",  // Ajustar a la zona horaria local (usa la zona horaria que necesites)
-                timeZoneName: "short"      // Incluye la abreviatura de la zona horaria (ej. GMT-5)
-            });
+            // Obtener la fecha y hora actuales en UTC
+            const fechaSalida = new Date();
 
-            // Formatear la fecha a YYYY-MM-DD HH:MM:SS
-            const formattedDate = new Date(localDate).toISOString().slice(0, 19).replace('T', ' '); // Formato YYYY-MM-DD HH:MM:SS
+            // Formatear la fecha a UTC en el formato YYYY-MM-DD HH:MM:SS (almacenada en UTC en la base de datos)
+            const formattedDateUTC = fechaSalida.toISOString().slice(0, 19).replace('T', ' ');
 
             // Actualizar el estado y la fecha_salida en registro
             const updateRegistroQuery = `UPDATE registro SET estado = 0, fecha_salida = ? WHERE id = ?;`;
-            conexion.query(updateRegistroQuery, [formattedDate, id], (error) => {
+            conexion.query(updateRegistroQuery, [formattedDateUTC, id], (error) => {
                 if (error) {
                     console.error(error.message);
                     return res.status(500).send('Error al actualizar el atributo estado y fecha_salida en registro');
@@ -558,6 +555,7 @@ app.put('/registro2/update/:id', (req, res) => {
         });
     });
 });
+
 
 
 app.put('/registro2/update2/:id', (req, res) => {
