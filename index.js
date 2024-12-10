@@ -539,7 +539,8 @@ app.put('/registro2/update/:id', (req, res) => {
             // Obtener la fecha y hora actuales en el formato deseado
             const fechaSalida = new Date();
             const offset = fechaSalida.getTimezoneOffset(); // Obtener el offset en minutos
-            const localDate = new Date(fechaSalida.getTime() - offset * 60000); // Ajustar a la zona horaria local
+            const localDate = new Date(fechaSalida.getTime() + offset * 60000); // Ajustar correctamente
+
 
             // Formatear la fecha a YYYY-MM-DD HH:MM:SS
             const formattedDate = localDate.toISOString().slice(0, 19).replace('T', ' '); // Formato YYYY-MM-DD HH:MM:SS
