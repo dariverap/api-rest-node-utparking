@@ -538,13 +538,16 @@ app.put('/registro2/update/:id', (req, res) => {
 
             // Obtener la fecha y hora actuales en UTC
             const fechaSalida = new Date();
+            
+            // Restar 5 horas (en milisegundos)
+            const fechaAjustada = new Date(fechaSalida.getTime() - 5 * 60 * 60 * 1000); // 5 horas en milisegundos
 
-            // Formatear la fecha a UTC en el formato YYYY-MM-DD HH:MM:SS (almacenada en UTC en la base de datos)
-            const formattedDateUTC = fechaSalida.toISOString().slice(0, 19).replace('T', ' ');
+            // Formatear la fecha a UTC en el formato YYYY-MM-DD HH:MM:SS
+            const formattedDate = fechaAjustada.toISOString().slice(0, 19).replace('T', ' ');
 
             // Actualizar el estado y la fecha_salida en registro
             const updateRegistroQuery = `UPDATE registro SET estado = 0, fecha_salida = ? WHERE id = ?;`;
-            conexion.query(updateRegistroQuery, [formattedDateUTC, id], (error) => {
+            conexion.query(updateRegistroQuery, [formattedDate, id], (error) => {
                 if (error) {
                     console.error(error.message);
                     return res.status(500).send('Error al actualizar el atributo estado y fecha_salida en registro');
@@ -555,6 +558,7 @@ app.put('/registro2/update/:id', (req, res) => {
         });
     });
 });
+
 
 
 
